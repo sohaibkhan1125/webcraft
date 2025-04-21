@@ -122,7 +122,7 @@ export default function HtmlValidator() {
                     <Label>Validation Results</Label>
                     <div className="mt-2 space-y-4">
                       {validationResult.errors.length > 0 && (
-                        <div className="bg-red-50 p-4 rounded-lg">
+                        <div className="bg-red-50 p-5 rounded-lg">
                           <h3 className="text-red-800 font-semibold mb-2">Errors</h3>
                           <ul className="list-disc pl-5 text-red-600">
                             {validationResult.errors.map((error, index) => (

@@ -22,6 +22,86 @@ import {
   export default function SeoToolsWebsite() {
     const tools = [
       { id: 1, name: "Text to Columns", description: "Convert text into columns using custom delimiters", logo: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-columns"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>, href: "/text-to-columns" },
+      { id: 67, name: "Color Palette Generator", description: "Create beautiful color schemes for your website or design projects", logo: (
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          width="24" 
+          height="24" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="#ffffff" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          className="lucide lucide-palette"
+        >
+          <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+          <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+          <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+          <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+        </svg>
+      ), href: "/color-palette-generator" },
+      { id: 68, name: "Flexbox Playground", description: "Interactive tool to learn and experiment with CSS Flexbox layouts in real-time", logo: (
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          width="24" 
+          height="24" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="#ffffff" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+        >
+          <rect width="6" height="6" x="4" y="4" rx="1" />
+          <rect width="6" height="6" x="14" y="4" rx="1" />
+          <rect width="6" height="6" x="4" y="14" rx="1" />
+          <rect width="6" height="6" x="14" y="14" rx="1" />
+          <path d="M10 16h4" />
+          <path d="M16 10v4" />
+          <path d="M4 10h16" />
+          <path d="M10 4v16" />
+        </svg>
+      ), href: "/flexbox-playground" },
+      { id: 69, name: "CSS Grid Generator", description: "Visually create complex CSS grid layouts and generate the code", logo: (
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          width="24" 
+          height="24" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="#ffffff" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+        >
+          <rect width="18" height="18" x="3" y="3" rx="2" />
+          <path d="M3 9h18" />
+          <path d="M3 15h18" />
+          <path d="M9 3v18" />
+          <path d="M15 3v18" />
+        </svg>
+      ), href: "/css-grid-generator" },
+      { id: 70, name: "CSV Converter", description: "Convert between CSV, JSON, XML and Excel formats with ease", logo: (
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          width="24" 
+          height="24" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="#ffffff" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+        >
+          <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+          <path d="M5 12V5a2 2 0 0 1 2-2h7l5 5v4" />
+          <path d="M5 21h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2z" />
+          <path d="m10 13-2 2 2 2" />
+          <path d="m14 17 2-2-2-2" />
+        </svg>
+      ), href: "/csv-converter" },
       { id: 2, name: "AdSense Revenue Calculator", description: "Calculate your AdSense revenue based on your traffic and click-through rate", logo: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-circle-dollar-sign"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>, href: "/adsense-revenue-calculator" },
       { id: 3, name: "Alt Text Generator", description: "Generate alt text for your images to improve SEO and accessibility", logo: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chart-no-axes-combined"><path d="M12 16v5"/><path d="M16 14v7"/><path d="M20 10v11"/><path d="m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15"/><path d="M4 18v3"/><path d="M8 14v7"/></svg>, href: "/alt-text-generator" },
       { id: 4, name: "AMP Validation Tool", description: "Amp validation tool to check if your website is AMP compliant", logo: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-left-right-ellipsis"><path d="m18 8 4 4-4 4"/><path d="m6 8-4 4 4 4"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/></svg>, href: "/amp-validation" },

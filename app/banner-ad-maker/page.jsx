@@ -2,8 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Download, RefreshCw } from 'lucide-react';
-import dynamic from 'next/dynamic';
+import { Download, RefreshCw, Upload, Trash, Check, AlertCircle } from 'lucide-react';
 
 const BannerAdMaker = () => {
   const [bannerText, setBannerText] = useState('Your Banner Text');
@@ -13,7 +12,13 @@ const BannerAdMaker = () => {
   const [bannerWidth, setBannerWidth] = useState(728);
   const [bannerHeight, setBannerHeight] = useState(90);
   const [isLoading, setIsLoading] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [previewScale, setPreviewScale] = useState(0.8);
   const bannerRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [bgImageObj, setBgImageObj] = useState(null);
 
   const bannerSizes = [
     { width: 728, height: 90, name: 'Leaderboard' },
@@ -22,45 +27,253 @@ const BannerAdMaker = () => {
     { width: 320, height: 50, name: 'Mobile Banner' },
   ];
 
+  // Calculate appropriate preview scale based on banner size and container
+  useEffect(() => {
+    const calculateScale = () => {
+      const container = document.querySelector('.preview-container');
+      if (!container) return;
+      
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+      
+      // Determine scale factor based on container and banner dimensions
+      const widthScale = (containerWidth - 40) / bannerWidth;
+      const heightScale = (containerHeight - 40) / bannerHeight;
+      
+      // Use the smaller scale to ensure the banner fits in the container
+      const scale = Math.min(widthScale, heightScale, 1);
+      setPreviewScale(Math.max(0.3, scale));
+    };
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    return () => window.removeEventListener('resize', calculateScale);
+  }, [bannerWidth, bannerHeight]);
+
+  // Handle image upload
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setError('');
+    const reader = new FileReader();
+    
+    reader.onload = (event) => {
+      // Create an image object to cache for later use in download
+      const img = new Image();
+      img.onload = () => {
+        setBgImageObj(img);
+      };
+      img.src = event.target.result;
+      
+      setBackgroundImage(event.target.result);
+    };
+    
+    reader.onerror = () => {
+      setError('Failed to load image. Please try a different file.');
+    };
+    
+    reader.readAsDataURL(file);
+  };
+
+  // Clear the background image
+  const clearBackgroundImage = () => {
+    setBackgroundImage(null);
+    setBgImageObj(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Convert any CSS color to a safe format
+  const convertToSafeColor = (color) => {
+    // Force colors to be in safe formats (not oklch)
+    try {
+      // If it's already a hex color, return it
+      if (/^#([0-9A-F]{3}){1,2}$/i.test(color)) {
+        return color;
+      }
+      
+      // Create a canvas to convert the color
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      const ctx = canvas.getContext('2d');
+      
+      // Draw a pixel with the color
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, 1, 1);
+      
+      // Get the pixel data which will be in RGBA format
+      const data = ctx.getImageData(0, 0, 1, 1).data;
+      
+      // Convert RGB to hex
+      const hex = `#${data[0].toString(16).padStart(2, '0')}${data[1].toString(16).padStart(2, '0')}${data[2].toString(16).padStart(2, '0')}`;
+      
+      return hex;
+    } catch (e) {
+      console.error('Error converting color:', e);
+      // Fallback to a safe default color
+      return color.includes('oklch') ? '#3B82F6' : color;
+    }
+  };
+
   const handleDownload = async () => {
     if (!bannerRef.current) return;
     
     setIsLoading(true);
+    setError('');
+    setSuccess('');
+    
     try {
-      // Import html2canvas dynamically
-      const html2canvas = (await import('html2canvas')).default;
+      // Get safe colors
+      const safeBackgroundColor = convertToSafeColor(bannerColor);
+      const safeTextColor = convertToSafeColor(textColor);
       
-      // Create a temporary container for the banner
-      const container = document.createElement('div');
-      const banner = bannerRef.current.cloneNode(true);
+      // Set up canvas with pixel ratio for high quality
+      const pixelRatio = window.devicePixelRatio || 2;
+      const canvas = document.createElement('canvas');
       
-      // Reset transform scale to 1 for the actual download
-      banner.style.transform = 'scale(1)';
-      container.appendChild(banner);
-      document.body.appendChild(container);
+      // Set actual size in memory (scaled for high resolution)
+      canvas.width = bannerWidth * pixelRatio;
+      canvas.height = bannerHeight * pixelRatio;
       
-      // Generate canvas
-      const canvas = await html2canvas(banner, {
-        backgroundColor: null,
-        scale: 2,
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-      });
+      // Set display size
+      canvas.style.width = `${bannerWidth}px`;
+      canvas.style.height = `${bannerHeight}px`;
       
-      // Clean up temporary elements
-      document.body.removeChild(container);
+      const ctx = canvas.getContext('2d');
       
-      // Create download link
+      // Scale all drawing operations by the pixel ratio
+      ctx.scale(pixelRatio, pixelRatio);
+      
+      // Apply anti-aliasing for smoother text
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      // Draw background with rounded corners
+      ctx.fillStyle = safeBackgroundColor;
+      
+      // Draw rectangle with rounded corners (4px radius)
+      const radius = 4;
+      ctx.beginPath();
+      ctx.moveTo(radius, 0);
+      ctx.lineTo(bannerWidth - radius, 0);
+      ctx.quadraticCurveTo(bannerWidth, 0, bannerWidth, radius);
+      ctx.lineTo(bannerWidth, bannerHeight - radius);
+      ctx.quadraticCurveTo(bannerWidth, bannerHeight, bannerWidth - radius, bannerHeight);
+      ctx.lineTo(radius, bannerHeight);
+      ctx.quadraticCurveTo(0, bannerHeight, 0, bannerHeight - radius);
+      ctx.lineTo(0, radius);
+      ctx.quadraticCurveTo(0, 0, radius, 0);
+      ctx.closePath();
+      ctx.fill();
+      
+      // If there's a background image, draw it with proper clipping for rounded corners
+      if (backgroundImage && bgImageObj) {
+        try {
+          // Save the current state for clipping
+          ctx.save();
+          
+          // Create clipping path for rounded corners
+          ctx.beginPath();
+          ctx.moveTo(radius, 0);
+          ctx.lineTo(bannerWidth - radius, 0);
+          ctx.quadraticCurveTo(bannerWidth, 0, bannerWidth, radius);
+          ctx.lineTo(bannerWidth, bannerHeight - radius);
+          ctx.quadraticCurveTo(bannerWidth, bannerHeight, bannerWidth - radius, bannerHeight);
+          ctx.lineTo(radius, bannerHeight);
+          ctx.quadraticCurveTo(0, bannerHeight, 0, bannerHeight - radius);
+          ctx.lineTo(0, radius);
+          ctx.quadraticCurveTo(0, 0, radius, 0);
+          ctx.closePath();
+          ctx.clip();
+          
+          // Draw the background image
+          ctx.drawImage(bgImageObj, 0, 0, bannerWidth, bannerHeight);
+          
+          // Restore the context after clipping
+          ctx.restore();
+        } catch (imgError) {
+          console.error('Error drawing background image:', imgError);
+          // Fallback to solid color if image fails
+          ctx.fillStyle = safeBackgroundColor;
+          ctx.fillRect(0, 0, bannerWidth, bannerHeight);
+        }
+      }
+      
+      // Draw text
+      ctx.fillStyle = safeTextColor;
+      
+      // Use a more reliable font stack
+      ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      // Add text shadow if there's a background image for better readability
+      if (backgroundImage) {
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+      }
+      
+      // Handle multi-line text
+      const words = bannerText.split(' ');
+      let line = '';
+      const lines = [];
+      const maxWidth = bannerWidth - 40; // 20px padding on each side
+      
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        
+        if (testWidth > maxWidth && n > 0) {
+          lines.push(line.trim());
+          line = words[n] + ' ';
+        } else {
+          line = testLine;
+        }
+      }
+      lines.push(line.trim());
+      
+      // Calculate line height and position text
+      const lineHeight = fontSize * 1.2;
+      const totalTextHeight = lines.length * lineHeight;
+      let textY = (bannerHeight - totalTextHeight) / 2 + lineHeight / 2;
+      
+      // Draw each line
+      for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], bannerWidth / 2, textY);
+        textY += lineHeight;
+      }
+      
+      // Generate a high-quality PNG with proper encoding
+      const dataUrl = canvas.toDataURL('image/png', 1.0);
+      
+      // Convert data URL to blob for better file handling
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      
+      // Create and trigger download
+      const downloadUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.download = `banner-${bannerWidth}x${bannerHeight}.png`;
-      link.href = canvas.toDataURL('image/png', 1.0);
+      link.href = downloadUrl;
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(downloadUrl);
+      }, 100);
+      
+      setSuccess('Banner downloaded successfully!');
     } catch (error) {
       console.error('Error generating banner:', error);
-      alert('Failed to download banner. Please try again.');
+      setError(`Failed to download banner: ${error.message || 'Unknown error'}. Please try again or use a different browser.`);
     } finally {
       setIsLoading(false);
     }
@@ -81,27 +294,49 @@ const BannerAdMaker = () => {
             Professional Banner Ad Maker
           </h1>
 
+          {/* Alert Messages */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-200 text-red-700 rounded-md flex items-center gap-2">
+              <AlertCircle size={18} />
+              {error}
+            </div>
+          )}
+          
+          {success && (
+            <div className="mb-4 p-3 bg-green-100 border border-green-200 text-green-700 rounded-md flex items-center gap-2">
+              <Check size={18} />
+              {success}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Banner Preview */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold mb-4">Preview</h2>
-              <div className="flex justify-center items-center bg-gray-100 p-4 rounded-md">
+              <div className="preview-container flex justify-center items-center bg-gray-100 p-4 rounded-md h-80">
                 <div
                   ref={bannerRef}
+                  data-banner="true"
                   style={{
                     width: `${bannerWidth}px`,
                     height: `${bannerHeight}px`,
-                    backgroundColor: bannerColor,
+                    backgroundColor: backgroundImage ? 'transparent' : bannerColor,
+                    backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     overflow: 'hidden',
-                    transform: 'scale(0.8)',
+                    transform: `scale(${previewScale})`,
                     transformOrigin: 'center',
+                    transition: 'all 0.3s ease',
+                    borderRadius: '4px',
                   }}
-                  className="rounded-md shadow-md transition-colors duration-200"
+                  className="rounded-md shadow-md relative"
                 >
                   <p
+                    data-banner-text="true"
                     style={{
                       color: textColor,
                       fontSize: `${fontSize}px`,
@@ -110,12 +345,17 @@ const BannerAdMaker = () => {
                       wordBreak: 'break-word',
                       width: '100%',
                       margin: 0,
+                      textShadow: backgroundImage ? '1px 1px 3px rgba(0,0,0,0.5)' : 'none',
+                      fontWeight: 'bold',
                     }}
                     className="font-semibold"
                   >
                     {bannerText}
                   </p>
                 </div>
+              </div>
+              <div className="mt-3 text-center text-sm text-gray-600">
+                {bannerWidth} x {bannerHeight}px
               </div>
             </div>
 
@@ -138,6 +378,37 @@ const BannerAdMaker = () => {
                   />
                 </div>
 
+                {/* Background Image */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Background Image (Optional)
+                  </label>
+                  <div className="flex space-x-2">
+                    <label className="flex-1">
+                      <div className="flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
+                        <Upload className="w-4 h-4 mr-2" />
+                        <span>{backgroundImage ? 'Change Image' : 'Upload Image'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          ref={fileInputRef}
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
+                      </div>
+                    </label>
+                    {backgroundImage && (
+                      <button
+                        onClick={clearBackgroundImage}
+                        className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                        title="Remove Image"
+                      >
+                        <Trash className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Colors */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -149,7 +420,13 @@ const BannerAdMaker = () => {
                       value={bannerColor}
                       onChange={(e) => setBannerColor(e.target.value)}
                       className="w-full h-10 rounded-md cursor-pointer"
+                      disabled={!!backgroundImage}
                     />
+                    {backgroundImage && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Remove background image to change color
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -231,6 +508,7 @@ const BannerAdMaker = () => {
             <h2 className="text-xl font-semibold mb-4">How to Use</h2>
             <ol className="list-decimal list-inside space-y-2 text-gray-700">
               <li>Enter your desired text in the banner text field</li>
+              <li>Optionally upload a background image for your banner</li>
               <li>Choose background and text colors using the color pickers</li>
               <li>Adjust the font size using the slider</li>
               <li>Select a standard banner size from the available options</li>
@@ -269,7 +547,8 @@ const BannerAdMaker = () => {
             </p>
             <ol className="list-decimal list-inside">
               <li>Enter your desired banner text in the input field.</li>
-              <li>Select your preferred background and text colors using the color pickers.</li>
+              <li>Upload a background image or select a background color.</li>
+              <li>Choose your preferred text color using the color picker.</li>
               <li>Adjust the font size to ensure readability.</li>
               <li>Choose a standard banner size from the available options.</li>
               <li>Click the Download button to save your banner as a PNG image.</li>

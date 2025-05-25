@@ -27,9 +27,21 @@ export default function RootLayout({
       <head>
         {/* Google AdSense code */}
         <meta name="google-adsense-account" content="ca-pub-9704392757395060" />
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9704392757395060" crossOrigin="anonymous"></script>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9704392757395060"
+          crossOrigin="anonymous"
+        ></script>
         {/* Google AdSense Verification */}
-        <meta name="google-adsense-verification" content="google.com, pub-9704392757395060, DIRECT, f08c47fec0942fa0" />
+        <meta
+          name="google-adsense-verification"
+          content="google.com, pub-9704392757395060, DIRECT, f08c47fec0942fa0"
+        />
+        {/* Google Site Verification */}
+        <meta
+          name="google-site-verification"
+          content="u66eI_qhzQmyYfcuucCmFbb7LjFrjvV6Brr_taFAmX8"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
